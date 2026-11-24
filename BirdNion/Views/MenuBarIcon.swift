@@ -75,7 +75,9 @@ enum MenuBarIconRenderer {
     /// Render the exact-two-value provider frame as one template image. This
     /// avoids AppKit's relaunch-dependent multiline title positioning while
     /// keeping the native status-button cell for all other frames.
-    static func stackedProviderImage(for id: String, percents: [Int]) -> NSImage {
+    static func stackedProviderImage(
+        for id: String, percents: [Int], minWidth: CGFloat = 0
+    ) -> NSImage {
         let font = NSFont.monospacedDigitSystemFont(
             ofSize: stackedTitleFontSize, weight: .semibold)
         let attributes: [NSAttributedString.Key: Any] = [
@@ -86,9 +88,12 @@ enum MenuBarIconRenderer {
         let lineWidths = lines.map { ($0 as NSString).size(withAttributes: attributes).width }
         let textWidth = ceil(max(1, lineWidths.max() ?? 1))
         let logoSize = providerLogoPointSize(for: id)
+        let contentWidth = textWidth + stackedProviderLogoGap + logoSize
         let targetSize = NSSize(
-            width: textWidth + stackedProviderLogoGap + logoSize,
+            width: max(contentWidth, ceil(minWidth)),
             height: stackedProviderImageHeight)
+        // Content sits flush right; any extra width pads the left edge.
+        let originX = targetSize.width - contentWidth
         let image = NSImage(size: targetSize)
 
         image.lockFocus()
@@ -101,14 +106,14 @@ enum MenuBarIconRenderer {
                 ? targetSize.height - lineHeight - 1
                 : bottomY
             (line as NSString).draw(
-                at: NSPoint(x: textWidth - width, y: y),
+                at: NSPoint(x: originX + textWidth - width, y: y),
                 withAttributes: attributes)
         }
 
         let logo = providerLogo(for: id, pointSize: logoSize)
         logo.draw(
             in: NSRect(
-                x: textWidth + stackedProviderLogoGap,
+                x: originX + textWidth + stackedProviderLogoGap,
                 y: (targetSize.height - logoSize) / 2,
                 width: logoSize,
                 height: logoSize),
@@ -118,6 +123,82 @@ enum MenuBarIconRenderer {
         image.unlockFocus()
         image.isTemplate = true
         return image
+    }
+
+    static let inlineTitleFontSize: CGFloat = 12
+    static let inlineProviderLogoGap: CGFloat = 4
+
+    /// Render a one-line provider frame (`84%` then logo) as one template
+    /// image. Drawing it ourselves, instead of a button title plus image,
+    /// keeps every frame the same width with no AppKit-added slack beside
+    /// the logo. Content sits flush right; extra `minWidth` pads the left.
+    static func inlineProviderImage(
+        for id: String, title: String, minWidth: CGFloat = 0
+    ) -> NSImage {
+        let font = NSFont.monospacedDigitSystemFont(
+            ofSize: inlineTitleFontSize, weight: .semibold)
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: NSColor.controlTextColor,
+        ]
+        let textWidth = title.isEmpty
+            ? 0 : ceil((title as NSString).size(withAttributes: attributes).width)
+        let gap = title.isEmpty ? 0 : inlineProviderLogoGap
+        let logoSize = providerLogoPointSize(for: id)
+        let contentWidth = textWidth + gap + logoSize
+        let targetSize = NSSize(
+            width: max(contentWidth, ceil(minWidth)),
+            height: stackedProviderImageHeight)
+        let originX = targetSize.width - contentWidth
+        let image = NSImage(size: targetSize)
+
+        image.lockFocus()
+        NSGraphicsContext.current?.imageInterpolation = .high
+        if !title.isEmpty {
+            // draw(at:) anchors the text box's bottom-left; centre that box.
+            let textHeight = (title as NSString).size(withAttributes: attributes).height
+            (title as NSString).draw(
+                at: NSPoint(x: originX, y: (targetSize.height - textHeight) / 2),
+                withAttributes: attributes)
+        }
+        let logo = providerLogo(for: id, pointSize: logoSize)
+        logo.draw(
+            in: NSRect(
+                x: originX + textWidth + gap,
+                y: (targetSize.height - logoSize) / 2,
+                width: logoSize,
+                height: logoSize),
+            from: NSRect(origin: .zero, size: logo.size),
+            operation: .sourceOver,
+            fraction: 1)
+        image.unlockFocus()
+        image.isTemplate = true
+        return image
+    }
+
+    /// Image for a provider frame padded on the left to `minWidth`; nil for
+    /// the bird, which keeps its own asset.
+    static func frameImage(_ frame: Frame, minWidth: CGFloat = 0) -> NSImage? {
+        guard case let .provider(id, _, percents, text) = frame else { return nil }
+        if text == nil && percents.count == 2 {
+            return stackedProviderImage(for: id, percents: percents, minWidth: minWidth)
+        }
+        let title = text ?? percentTitle(for: percents, layout: .inline)
+        return inlineProviderImage(for: id, title: title, minWidth: minWidth)
+    }
+
+    /// Width shared by every rotating frame so the status item never resizes
+    /// (which would shove all menu-bar icons to its left). Percentages are
+    /// measured as `100%` so 100 → 99 does not change the width either.
+    static func widestFrameWidth(_ frames: [Frame]) -> CGFloat {
+        frames.reduce(0) { widest, frame in
+            var widened = frame
+            if case let .provider(id, name, percents, nil) = frame {
+                widened = .provider(
+                    id: id, name: name, percents: percents.map { _ in 100 }, text: nil)
+            }
+            return max(widest, frameImage(widened)?.size.width ?? 0)
+        }
     }
 
     /// Build the displayed frames. With the global setting off, or with no

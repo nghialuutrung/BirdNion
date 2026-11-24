@@ -665,40 +665,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// brand mark right). Bird frame is image-only (no title).
     private func applyCurrentFrame() {
         guard let button = statusItem?.button else { return }
-        // Clear any stacked-title attributes before rendering the next frame.
-        button.attributedTitle = NSAttributedString(string: "")
         let frame = frames.indices.contains(frameIndex) ? frames[frameIndex] : .bird
-        switch frame {
-        case .bird:
-            button.imagePosition = .imageOnly
-            button.image = MenuBarIconRenderer.iconImage()
-            button.title = ""
-        case let .provider(id, _, percents, text):
-            // Percent on the left, brand logo on the right — never the
-            // provider display name in the title (that lives in the tooltip
-            // / popover). Trailing space keeps the last digit off the logo.
-            let isStacked = text == nil && percents.count == 2
-            if isStacked {
-                button.imagePosition = .imageOnly
-                button.image = MenuBarIconRenderer.stackedProviderImage(
-                    for: id, percents: percents)
-                button.title = ""
-                break
-            }
-
-            button.imagePosition = .imageRight
-            button.image = MenuBarIconRenderer.providerLogo(for: id)
-            let menuBarFont = NSFont.monospacedDigitSystemFont(ofSize: 12, weight: .semibold)
-            button.font = menuBarFont
-            if let text {
-                // Display-mode override (Kiro credits). Empty = logo only.
-                button.title = text.isEmpty ? "" : "\(text) "
-            } else {
-                let numbers = MenuBarIconRenderer.percentTitle(for: percents, layout: .inline)
-                let title = "\(numbers) "
-                button.title = title
-            }
-        }
+        // Frames are images only; the percent text is drawn inside them.
+        button.attributedTitle = NSAttributedString(string: "")
+        button.title = ""
+        button.imagePosition = .imageOnly
+        // Every rotating frame is drawn at the same width, so the item never
+        // resizes and the icons to its left stay put.
+        let sharedWidth = frames.count > 1 ? MenuBarIconRenderer.widestFrameWidth(frames) : 0
+        button.image = MenuBarIconRenderer.frameImage(frame, minWidth: sharedWidth)
+            ?? MenuBarIconRenderer.iconImage()
     }
 
     @objc func menuBarVisibilityDidChange(_ notification: Notification) {
