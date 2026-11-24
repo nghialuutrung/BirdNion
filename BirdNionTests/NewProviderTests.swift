@@ -3562,6 +3562,27 @@ final class NewProviderTests: XCTestCase {
         XCTAssertGreaterThan(image.size.width, image.size.height)
     }
 
+    func testMenuBarFramesShareOneWidthWithContentFlushRight() {
+        let frames: [MenuBarIconRenderer.Frame] = [
+            .provider(id: "codex", name: "Codex", percents: [84], text: nil),
+            .provider(id: "claude", name: "Claude", percents: [51, 73], text: nil),
+            .provider(id: "devin", name: "Devin", percents: [7], text: nil),
+        ]
+        let width = MenuBarIconRenderer.widestFrameWidth(frames)
+        for frame in frames {
+            let image = MenuBarIconRenderer.frameImage(frame, minWidth: width)
+            XCTAssertEqual(image?.size.width, width)
+            XCTAssertTrue(image?.isTemplate ?? false)
+        }
+        // A one-digit value still reserves room for "100%".
+        let narrow = MenuBarIconRenderer.frameImage(frames[2])!.size.width
+        let full = MenuBarIconRenderer.frameImage(
+            .provider(id: "devin", name: "Devin", percents: [100], text: nil))!.size.width
+        XCTAssertLessThan(narrow, full)
+        XCTAssertGreaterThanOrEqual(width, full)
+        XCTAssertNil(MenuBarIconRenderer.frameImage(.bird))
+    }
+
     func testProviderLogoPointSizeUsesProviderSpecificScale() {
         XCTAssertEqual(
             MenuBarIconRenderer.providerLogoPointSize(for: "freemodel"),
