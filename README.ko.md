@@ -45,6 +45,7 @@ macOS 네이티브 앱은 SwiftUI/AppKit과 필요한 부분만 추려 프로젝
 - `BirdNion_<version>_amd64.AppImage` - 휴대용 Linux 번들입니다.
 - Homebrew cask는 SHA256을 사용합니다.
 - 공증 티켓이 앱에 첨부되어 있으므로, 일반적인 “인터넷에서 다운로드한 앱” 확인 후에는 오프라인에서도 Gatekeeper가 바로 앱을 엽니다.
+- 그래도 macOS가 “Apple could not verify “BirdNion” is free of malware”를 표시하면(Homebrew 설치 환경에서 재부팅 후 확인됨) **Move to Trash**가 아닌 **Done**을 선택한 뒤 시스템 설정 → 개인정보 보호 및 보안에서 **그래도 열기**를 클릭하거나, `xattr -dr com.apple.quarantine /Applications/BirdNion.app`를 실행한 후 앱을 다시 여세요.
 
 ### Homebrew로 macOS에 설치
 
