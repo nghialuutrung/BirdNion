@@ -45,6 +45,7 @@
 - `BirdNion_<version>_amd64.AppImage` - Linux 便携版。
 - Homebrew cask 使用 SHA256 校验。
 - 公证票据已附加到应用中，因此完成常规的“从互联网下载”确认后，Gatekeeper 即可直接放行，即使离线也能打开。
+- 如果 macOS 仍提示“Apple could not verify “BirdNion” is free of malware”（在通过 Homebrew 安装的机器上重启后出现过），请选择 **Done** 而不是 **Move to Trash**，然后在“系统设置 → 隐私与安全性”中点击 **仍要打开**，或运行 `xattr -dr com.apple.quarantine /Applications/BirdNion.app` 后重新打开应用。
 
 ### 在 macOS 上通过 Homebrew 安装
 
