@@ -45,6 +45,7 @@ Tải các gói dựng sẵn từ [Bản phát hành trên GitHub](https://githu
 - `BirdNion_<version>_amd64.AppImage` - gói Linux chạy độc lập, không cần cài đặt.
 - Homebrew cask sử dụng SHA256.
 - Chứng nhận công chứng được đính kèm trực tiếp vào ứng dụng, nên Gatekeeper có thể mở ứng dụng ngay cả khi ngoại tuyến sau bước xác nhận tiêu chuẩn “được tải xuống từ Internet”.
+- Nếu macOS vẫn báo "Apple could not verify “BirdNion” is free of malware" (từng gặp sau khi khởi động lại máy với bản cài qua Homebrew), hãy chọn **Done**, không chọn **Move to Trash**, rồi bấm **Open Anyway** trong System Settings → Privacy & Security, hoặc chạy `xattr -dr com.apple.quarantine /Applications/BirdNion.app` và mở lại ứng dụng.
 
 ### macOS qua Homebrew
 
