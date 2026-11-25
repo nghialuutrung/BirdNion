@@ -45,6 +45,7 @@ Téléchargez les paquets précompilés depuis les [versions GitHub](https://git
 - `BirdNion_<version>_amd64.AppImage` - paquet Linux portable.
 - Le cask Homebrew utilise SHA256.
 - Le ticket de notarisation est joint à l’application : Gatekeeper l’ouvre donc directement, même hors ligne, après la confirmation habituelle « téléchargée depuis Internet ».
+- Si macOS affiche malgré tout « Apple could not verify “BirdNion” is free of malware » (constaté après un redémarrage sur une installation Homebrew), choisissez **Done** et non **Move to Trash**, puis cliquez sur **Ouvrir quand même** dans Réglages Système → Confidentialité et sécurité, ou exécutez `xattr -dr com.apple.quarantine /Applications/BirdNion.app` et rouvrez l’application.
 
 ### macOS via Homebrew
 
